@@ -27,7 +27,9 @@ pip install -e .                 # Install in editable mode
 
 ### Testing
 ```bash
-python test_models.py            # Validate Pydantic models against real API samples
+python -m unittest discover -v   # Run all tests with unittest framework  
+python test_models.py            # Run tests directly
+python -m unittest test_models.TestBreachModel -v  # Run specific test class
 ```
 
 ### Running the CLI

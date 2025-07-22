@@ -135,10 +135,20 @@ invalid-email:error:400 Bad Request
 Run the model validation tests:
 
 ```bash
+# Run all tests using unittest discovery
+python -m unittest discover -v
+
+# Run tests directly
 python test_models.py
+
+# Run specific test class
+python -m unittest test_models.TestBreachModel -v
+
+# Run specific test method
+python -m unittest test_models.TestEmailCheckResult.test_result_with_breaches -v
 ```
 
-This validates that all Pydantic models correctly parse real HIBP API responses.
+This validates that all Pydantic models correctly parse real HIBP API responses using Python's unittest framework.
 
 ## Development
 
