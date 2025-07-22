@@ -98,3 +98,12 @@ class SubscribedDomain(BaseModel):
 
     class Config:
         populate_by_name = True
+
+
+class EmailCheckResult(BaseModel):
+    """Model for email breach check result."""
+    
+    email: str = Field(..., description="Email address that was checked")
+    status: str = Field(..., description="Status: 'ok' or 'error'")
+    breaches: list[str] = Field(default_factory=list, description="List of breach names (empty if no breaches)")
+    error: Optional[str] = Field(None, description="Error message if status is 'error'")

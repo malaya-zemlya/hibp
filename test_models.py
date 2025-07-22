@@ -4,7 +4,7 @@ Test cases for HIBP API models based on sample responses from the API documentat
 """
 
 import json
-from hibp.models import Breach, BreachName, Paste
+from hibp.models import Breach, BreachName, Paste, EmailCheckResult
 
 
 def test_breach_name_parsing():
@@ -225,6 +225,49 @@ def test_pwned_passwords_response():
     print("✅ Pwned Passwords response validation successful\n")
 
 
+def test_email_check_result():
+    """Test EmailCheckResult model."""
+    
+    print("Testing EmailCheckResult model...")
+    
+    # Test successful result with breaches
+    result_with_breaches = EmailCheckResult(
+        email="test@example.com",
+        status="ok", 
+        breaches=["Adobe", "LinkedIn"]
+    )
+    print(f"  ✓ With breaches: {result_with_breaches.email} - {len(result_with_breaches.breaches)} breaches")
+    assert result_with_breaches.email == "test@example.com"
+    assert result_with_breaches.status == "ok"
+    assert result_with_breaches.breaches == ["Adobe", "LinkedIn"]
+    assert result_with_breaches.error is None
+    
+    # Test successful result with no breaches
+    result_clean = EmailCheckResult(
+        email="clean@example.com",
+        status="ok"
+    )
+    print(f"  ✓ Clean email: {result_clean.email} - {len(result_clean.breaches)} breaches")
+    assert result_clean.email == "clean@example.com" 
+    assert result_clean.status == "ok"
+    assert result_clean.breaches == []  # Default empty list
+    assert result_clean.error is None
+    
+    # Test error result
+    result_error = EmailCheckResult(
+        email="invalid@example.com",
+        status="error",
+        error="Rate limit exceeded"
+    )
+    print(f"  ✓ Error result: {result_error.email} - {result_error.error}")
+    assert result_error.email == "invalid@example.com"
+    assert result_error.status == "error"
+    assert result_error.breaches == []  # Default empty list even on error
+    assert result_error.error == "Rate limit exceeded"
+    
+    print("✅ EmailCheckResult model validation successful\n")
+
+
 if __name__ == "__main__":
     print("🧪 Running HIBP API Model Tests\n")
     print("=" * 50)
@@ -237,6 +280,7 @@ if __name__ == "__main__":
         test_stealer_logs_responses()
         test_data_classes_response()
         test_pwned_passwords_response()
+        test_email_check_result()
         
         print("=" * 50)
         print("🎉 All tests passed! The Pydantic models correctly parse HIBP API responses.")

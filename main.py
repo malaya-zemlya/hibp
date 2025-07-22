@@ -10,11 +10,11 @@ import argparse
 import os
 import re
 import sys
-from typing import Dict, List, Optional
+from typing import List
 from dotenv import load_dotenv
 
 from hibp.api_client import ApiClient
-from hibp.models import BreachName
+from hibp.models import BreachName, EmailCheckResult
 
 load_dotenv()
 
@@ -47,7 +47,7 @@ def extract_emails_from_line(line: str) -> List[str]:
     return re.findall(email_pattern, line)
 
 
-def check_email_breaches(api_client: ApiClient, email: str) -> Dict[str, any]:
+def check_email_breaches(api_client: ApiClient, email: str) -> EmailCheckResult:
     """
     Check if an email appears in any breaches.
     
@@ -56,52 +56,52 @@ def check_email_breaches(api_client: ApiClient, email: str) -> Dict[str, any]:
         email: Email address to check
         
     Returns:
-        Dictionary with 'status', 'email', and either 'breaches' or 'error'
+        EmailCheckResult with status, email, and either breaches or error
     """
     try:
         # Get breaches for the account (truncated response for just names)
         breaches = api_client.get_breaches_for_account(email, truncate_response=True)
         
         if breaches is None:
-            return {
-                'status': 'ok',
-                'email': email,
-                'breaches': []
-            }
+            return EmailCheckResult(
+                email=email,
+                status='ok',
+                breaches=[]
+            )
         
         breach_names = [breach.name for breach in breaches]
-        return {
-            'status': 'ok', 
-            'email': email,
-            'breaches': breach_names
-        }
+        return EmailCheckResult(
+            email=email,
+            status='ok',
+            breaches=breach_names
+        )
         
     except Exception as e:
-        return {
-            'status': 'error',
-            'email': email, 
-            'error': str(e)
-        }
+        return EmailCheckResult(
+            email=email,
+            status='error',
+            error=str(e)
+        )
 
 
-def format_result(result: Dict[str, any]) -> str:
+def format_result(result: EmailCheckResult) -> str:
     """
-    Format a result dictionary into the required output format.
+    Format a result into the required output format.
     
     Args:
-        result: Result dictionary from check_email_breaches
+        result: EmailCheckResult from check_email_breaches
         
     Returns:
         Formatted string: "email:ok:breach1 breach2 ..." or "email:error:description"
     """
-    if result['status'] == 'ok':
-        if result['breaches']:
-            breaches_str = ' '.join(result['breaches'])
-            return f"{result['email']}:ok:{breaches_str}"
+    if result.status == 'ok':
+        if result.breaches:
+            breaches_str = ' '.join(result.breaches)
+            return f"{result.email}:ok:{breaches_str}"
         else:
-            return f"{result['email']}:ok:"
+            return f"{result.email}:ok:"
     else:
-        return f"{result['email']}:error:{result['error']}"
+        return f"{result.email}:error:{result.error}"
 
 
 def main():
@@ -169,9 +169,9 @@ def main():
     print(f"Total emails processed: {total_emails}")
     
     # Count results by status
-    ok_results = [r for r in results if r['status'] == 'ok']
-    error_results = [r for r in results if r['status'] == 'error']
-    breached_results = [r for r in ok_results if r['breaches']]
+    ok_results = [r for r in results if r.status == 'ok']
+    error_results = [r for r in results if r.status == 'error']
+    breached_results = [r for r in ok_results if r.breaches]
     
     print(f"Successful checks: {len(ok_results)}")
     print(f"Errors: {len(error_results)}")
